@@ -1,7 +1,7 @@
 // Produce list (fruit, nuts, spices, crates, other items) and item pages.
 import { $, $$, esc, fmt, store, debounce, idPath } from "./util.js";
 import { db, node, itemName, food, groupOf, craftingFor, cookingFor, craftingUses, cookingUses, sawmillFor, waysFor } from "./db.js";
-import { icon, itemChip, treeChip, setNav, sortTable, recipeCard, cookCard, sawCard, pickItem } from "./ui.js";
+import { icon, itemChip, treeChip, setNav, sortTable, recipeCard, cookCard, sawCard, pickItem, treeOfItem } from "./ui.js";
 
 const GROUPS = { berries: "Berry", fruits: "Fruit", nuts: "Nut", roasted_nuts: "Roasted" };
 const TYPES = ["Fruit", "Berry", "Nut", "Roasted", "Spice & produce", "Dye", "Crate", "Other"];
@@ -112,6 +112,12 @@ export function viewItems(app) {
 
 export function viewItem(app, path) {
   const id = `productivetrees:${path}`;
+  // wood blocks and hives have no page of their own, they belong to their tree
+  const tree = treeOfItem(id);
+  if (tree) {
+    location.replace(`#/tree/${tree}`);
+    return;
+  }
   if (!db.items[id]) {
     app.innerHTML = `<h1>Unknown item</h1><p><a href="#/produce">← Produce</a></p>`;
     return;

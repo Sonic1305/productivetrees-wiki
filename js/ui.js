@@ -7,12 +7,19 @@ export function icon(id, cls = "sm") {
   return it?.icon ? `<img class="ic ${cls}" src="icons/${esc(it.icon)}.png" alt="" loading="lazy">` : "";
 }
 
-const TREE_PART = /^productivetrees:(.+?)_(sapling|leaves|log|wood|stripped_log|stripped_wood|planks)$/;
+const TREE_PART = /^productivetrees:(.+?)_(sapling|leaves|log|wood|stripped_log|stripped_wood|planks|stairs|slab|fence|fence_gate|door|trapdoor|pressure_plate|button|sign|hanging_sign|bookshelf)$|^productivetrees:(?:advanced_(.+)_beehive|expansion_box_(.+))$/;
 
-// where an item links to: tree parts go to their tree, other mod items to the item page
-export function itemHref(id) {
+// the tree an item belongs to (sapling, logs, planks, wood blocks, hive), if any
+export function treeOfItem(id) {
   const m = id.match(TREE_PART);
-  if (m && node[m[1]]) return `#/tree/${m[1]}`;
+  const t = m && (m[1] || m[3] || m[4]);
+  return t && node[t] ? t : null;
+}
+
+// where an item links to: everything made from a tree goes to that tree, other mod items to the item page
+export function itemHref(id) {
+  const t = treeOfItem(id);
+  if (t) return `#/tree/${t}`;
   if (id.startsWith("productivetrees:") && db.items[id]) return `#/item/${id.split(":")[1]}`;
   return "";
 }
@@ -21,7 +28,7 @@ export function itemChip(id, count) {
   const n = count && count !== "1" && count !== 1 ? `<span class="muted">${esc(count)}×</span> ` : "";
   const inner = `${icon(id)}${n}${esc(itemName(id))}`;
   const href = itemHref(id);
-  return href
+  return href && href !== location.hash
     ? `<a class="item" href="${href}" title="${esc(id)}">${inner}</a>`
     : `<span class="item" title="${esc(id)}">${inner}</span>`;
 }
