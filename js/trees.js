@@ -1,7 +1,7 @@
 // Tree list and tree detail pages.
 import { $, esc, fmt, store, debounce } from "./util.js";
 import { db, node, itemName, tierOf, waysFor, matchingCrosses, perDelivery, fruitMinutes, SAPLING_MINUTES } from "./db.js";
-import { icon, itemChip, treeChip, treeCell, setNav, pct, minutes, sortTable, recipeCard, sawCard } from "./ui.js";
+import { icon, itemChip, treeChip, treeCell, setNav, pct, minutes, sortTable } from "./ui.js";
 
 const LOOT_NAMES = {
   "minecraft:chests/bastion_treasure": "Bastion treasure chests",
@@ -113,10 +113,8 @@ export function viewTree(app, id) {
     (kids[r.result] ||= []).push({ r, partners: self ? [id] : partners.filter(p => (r.a.includes(id) ? r.b : r.a).includes(p)) });
   }
   const f = t.fruit;
-  const saw = Object.values(db.sawmill).filter(r => r.input.items.includes(t.log));
-  const sawM = Object.values(db.sawing).filter(r => r.input.items.includes(t.log));
-  const hiveRecipe = t.hive && Object.keys(db.crafting).find(k => db.crafting[k].result === t.hive);
-  const boxRecipe = t.box && Object.keys(db.crafting).find(k => db.crafting[k].result === t.box);
+  // wood recipes are the same for every tree, only the Sawmill extras differ
+  const sawExtra = Object.values(db.sawmill).filter(r => r.input.items.includes(t.log) && r.tertiary);
   const tier = tierOf(id);
   const connected = (db.code.connectedLeaves || []).includes(id);
 
@@ -171,10 +169,11 @@ export function viewTree(app, id) {
       </div>` : ""}
       <div class="card">
         <h3>Wood</h3>
-        ${saw.length || sawM.length ? `<div class="rcards">${saw.map(r => sawCard(r)).join("")}${sawM.map(r => sawCard(r, "Mekanism Precision Sawmill")).join("")}</div>` : ""}
+        ${sawExtra.map(r => `<p>The Sawmill also gives ${itemChip(r.tertiary.item, r.tertiary.count)} per log.</p>`).join("")}
         ${t.stripDrop ? `<p>Stripping a log (axe or Stripper) also drops ${itemChip(t.stripDrop)}.</p>` : ""}
         ${t.woodBlocks ? `<details><summary>${t.woodBlocks.length} wood blocks</summary><div class="items">${t.woodBlocks.map(i => itemChip(i)).join("")}</div></details>` : ""}
-        ${hiveRecipe || boxRecipe ? `<h3>Productive Bees</h3><div class="rcards">${hiveRecipe ? recipeCard(hiveRecipe) : ""}${boxRecipe ? recipeCard(boxRecipe) : ""}</div>` : ""}
+        ${t.hive || t.box ? `<div class="items" style="margin-top:10px">${[t.hive, t.box].filter(Boolean).map(i => itemChip(i)).join("")}</div>` : ""}
+        <p class="small muted" style="margin-bottom:0">Planks, wood blocks, Sawmill and hives work the same for every tree. <a href="#/guide?s=wood">Wood recipes</a>, <a href="#/guide?s=hives">hive recipes</a></p>
       </div>
     </div>
     ${Object.keys(kids).length ? `

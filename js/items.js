@@ -1,7 +1,7 @@
 // Produce list (fruit, nuts, spices, crates, other items) and item pages.
 import { $, $$, esc, fmt, store, debounce, idPath } from "./util.js";
 import { db, node, itemName, food, groupOf, craftingFor, cookingFor, craftingUses, cookingUses, sawmillFor, waysFor } from "./db.js";
-import { icon, itemChip, treeChip, setNav, sortTable, recipeCard, cookCard, sawCard } from "./ui.js";
+import { icon, itemChip, treeChip, setNav, sortTable, recipeCard, cookCard, sawCard, pickItem } from "./ui.js";
 
 const GROUPS = { berries: "Berry", fruits: "Fruit", nuts: "Nut", roasted_nuts: "Roasted" };
 const TYPES = ["Fruit", "Berry", "Nut", "Roasted", "Spice & produce", "Dye", "Crate", "Other"];
@@ -120,7 +120,11 @@ export function viewItem(app, path) {
   const trees = db.fruitOf[id] || [];
   const f = food(id);
   const saw = sawmillFor(id);
-  const made = craftingFor(id).map(r => recipeCard(r)).join("") + cookCard(id) + saw.map(r => sawCard(r)).join("");
+  // the same Sawmill recipe exists for every log: show one card instead of a hundred
+  const sawCards = saw.length > 3
+    ? sawCard(saw[0], `Sawmill: any log (${saw.length} kinds)`)
+    : saw.map(r => sawCard(r, `Sawmill: ${itemName(pickItem(r.input))}`)).join("");
+  const made = craftingFor(id).map(r => recipeCard(r)).join("") + cookCard(id) + sawCards;
   const usedCraft = craftingUses(id).filter(r => db.crafting[r].result !== id).map(r => recipeCard(r)).join("")
     + [...new Set(cookingUses(id).map(r => db.cooking[r].result))].map(cookCard).join("");
   const uses = db.uses[id] || [];
