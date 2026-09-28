@@ -40,7 +40,8 @@ function picker(el, value, onPick, opts = {}) {
     });
     fill();
   };
-  const outside = e => { if (open && !el.contains(e.target)) { open = false; draw(); } };
+  // the button is redrawn on click, so a detached target was inside the picker
+  const outside = e => { if (open && e.target.isConnected && !el.contains(e.target)) { open = false; draw(); } };
   document.addEventListener("click", outside);
   draw();
 }
